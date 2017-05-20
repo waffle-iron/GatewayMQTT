@@ -77,14 +77,17 @@ void configModeCallback (WiFiManager *myWiFiManager) {
 }
 
 void before() {
+  set_pins();
+  debouncer.update();
+  int value1 = debouncer.read();
+  
   for (uint8_t t = 4; t > 0; t--) { // Utile en cas d'OTA ?
       Serial.printf("[SETUP] WAIT %d...\n", t);
       Serial.flush();
       delay(1000);
     }
     
-  //pinMode(MY_INCLUSION_MODE_BUTTON_PIN, INPUT);
-  if (MY_INCLUSION_MODE_BUTTON_PIN == HIGH) { 
+  if (value1 == LOW) {
  // if (resetConfig) { 
     ticker.attach(0.8, tick);
     Serial.println("Resetting config to the inital state");
@@ -94,10 +97,9 @@ void before() {
     WiFiManager wifiManager;
     wifiManager.resetSettings();
     Serial.println("System cleared");
-     ticker.detach();
+    ticker.detach();
   }
 
-  set_pins();
   Serial.println();
   Serial.println("mounting FS...");
   if (SPIFFS.begin()) {
@@ -143,7 +145,21 @@ void before() {
   }
   ticker.attach(0.5, tick);
   WiFiManager wifiManager;
-  wifiManager.setCustomHeadElement("<script>document.addEventListener('DOMContentLoaded', function() { var params = window.location.search.substring(1).split('&'); for (var param of params) { param = param.split('='); try { document.getElementById( param[0] ).value = param[1]; } catch (e) { console.log('WARNING param', param[0], 'not found in page'); } } });</script>");
+  String script;
+  script += "<script>";
+  script += "document.addEventListener('DOMContentLoaded', function() {";
+  script +=     "var params = window.location.search.substring(1).split('&');";
+  script +=     "for (var param of params) {";
+  script +=         "param = param.split('=');";
+  script +=         "try {";
+  script +=             "document.getElementById( param[0] ).value = param[1];";
+  script +=         "} catch (e) {";
+  script +=             "console.log('WARNING param', param[0], 'not found in page');";
+  script +=         "}";
+  script +=     "}";
+  script += "});";
+  script += "</script>";
+  wifiManager.setCustomHeadElement(script.c_str());
   wifiManager.setSaveConfigCallback(saveConfigCallback);
   wifiManager.addParameter(&custom_mqtt_server);
   wifiManager.addParameter(&custom_mqtt_port);
@@ -151,9 +167,15 @@ void before() {
   wifiManager.addParameter(&custom_mqtt_user);
   wifiManager.addParameter(&custom_mqtt_password);
   wifiManager.setMinimumSignalQuality();
-  wifiManager.setTimeout(180);
+ // wifiManager.setTimeout(180);
+  char msgBuffer[10];         
+  char *espChipId;
+  float chipId = ESP.getChipId();
+  espChipId = dtostrf(chipId, 10, 0, msgBuffer);
+  strcpy(deviceId,devicePrefix); 
+  strcat(deviceId,espChipId);
 
-  if (!wifiManager.autoConnect()) {
+  if (!wifiManager.autoConnect(deviceId, devicePass)) {
     Serial.println("Echec de la connection --> Timeout");
     delay(3000);
     //reset and try again, or maybe put it to deep sleep
@@ -211,4 +233,3 @@ void before() {
   ticker.detach();
   digitalWrite(BUILTIN_LED, HIGH);
 }
-

@@ -3,17 +3,12 @@
 
 void setup(void) {
     Serial.println();
-//    for (uint8_t t = 4; t > 0; t--) { // Utile en cas d'OTA ?
-//      Serial.printf("[SETUP] WAIT %d...\n", t);
-//      Serial.flush();
-//      delay(1000);
-//    }
     set_pins();
     ticker.detach();   
 }
 
 void presentation() {
-  sendSketchInfo(SKETCH_NAME, SKETCH_MAJOR_VER "." SKETCH_MINOR_VER);
+  sendSketchInfo(SKETCH_NAME, SKETCH_VERSION);
 }
 
 void receiveOtaSignal(int otaSignal) { 
@@ -110,4 +105,3 @@ void loop(void) {
    // digitalClockDisplay();
   }
 }
-
