@@ -1,3 +1,4 @@
+[![Stories in Ready](https://badge.waffle.io/courget/GatewayMQTT.png?label=ready&title=Ready)](https://waffle.io/courget/GatewayMQTT?utm_source=badge)
 # BIODIAG - GATEWAY
 
 ## Requirements
